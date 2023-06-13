@@ -10,11 +10,13 @@ from . import elasticache
 from . import elasticsearch
 from . import emr
 from . import iam
+from .jsonwrappers import iamjson
 from . import inspector
 from . import kms
 from . import lambda_function
 from . import permission_relationships
 from . import rds
+from .jsonwrappers import rdsjson
 from . import redshift
 from . import resourcegroupstaggingapi
 from . import route53
@@ -44,8 +46,8 @@ from .ec2.vpc_peerings import sync_vpc_peerings
 
 
 RESOURCE_FUNCTIONS: Dict = {
-    # 'iam': iam.sync,
-    's3': s3json.sync,
+    # 'iam': iamjson.sync,
+    # 's3': s3json.sync,
     # 'dynamodb': dynamodb.sync,
     # 'ec2:launch_templates': sync_ec2_launch_templates,
     # 'ec2:autoscalinggroup': sync_ec2_auto_scaling_groups,
@@ -74,7 +76,7 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'emr': emr.sync,
     # 'lambda_function': lambda_function.sync,
     # 'kms': kms.sync,
-    # 'rds': rds.sync,
+    'rds': rdsjson.sync,
     # 'redshift': redshift.sync,
     # 'route53': route53.sync,
     # 'elasticsearch': elasticsearch.sync,

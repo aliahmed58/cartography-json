@@ -2,12 +2,12 @@ import datetime
 import hashlib
 import logging
 import json
-import time
 from typing import Dict
 from typing import List
 
 import boto3
 import neo4j
+from cartography.intel.aws.jsonwrappers.json_utils import add_relationship, default_json_serializer, create_folder
 from cartography.stats import get_stats_client
 from cartography.util import timeit
 from cartography.intel.aws.s3 import get_s3_bucket_list, parse_acl, parse_policy, parse_policy_statements, \
@@ -19,29 +19,6 @@ logger = logging.getLogger(__name__)
 stat_handler = get_stats_client(__name__)
 
 json_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-
-
-@timeit
-def _add_relationship(relationship_details: dict, s3_dict: dict) -> None:
-    """
-    :param relationship_details: details of relationship between two entities
-    :param s3_dict: the s3_dict that holds all the entities and relationships
-    :return: None
-    """
-    relationships = s3_dict['relationships']
-    relationships.append(
-        {
-            'to_id': relationship_details['to_id'],
-            'from_id': relationship_details['from_id'],
-            'to_label': relationship_details['to_label'],
-            'from_label': relationship_details['from_label'],
-            'type': relationship_details['type'],
-            'properties': {
-                'firstseen': int(time.time()),
-                'lastupdated': int(time.time())
-            }
-        }
-    )
 
 
 @timeit
@@ -87,7 +64,7 @@ def _load_s3_buckets(bucket_data, aws_account_id: int, aws_update_tag: int, s3_d
             'to_label': 'AWSAccount'
         }
 
-        _add_relationship(relationship_details, s3_dict)
+        add_relationship(relationship_details, s3_dict)
 
 
 def _load_s3_acls(acls: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -113,7 +90,7 @@ def _load_s3_acls(acls: List[Dict], update_tag: int, s3_dict: dict) -> None:
             'from_label': 'S3Acl'
         }
 
-        _add_relationship(relationship_details, s3_dict)
+        add_relationship(relationship_details, s3_dict)
 
 
 def _load_s3_policy_statements(statements: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -140,7 +117,7 @@ def _load_s3_policy_statements(statements: List[Dict], update_tag: int, s3_dict:
             'type': 'POLICY_STATEMENT'
         }
 
-        _add_relationship(relationship_details, s3_dict)
+        add_relationship(relationship_details, s3_dict)
 
 
 def _load_s3_policies(policies: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -179,29 +156,18 @@ def _set_default_values(aws_account_id: str, s3_dict: dict) -> None:
                 entities[bucket_name]['properties']['default_encryption'] = 'false'
 
 
-def _create_folder(folder_path: str) -> None:
-    """
-    Create folder if they do not exist for output json files
-    :param folder_path: the path for folder
-    :return: None
-    """
-    folder = f'{folder_path}/jsonassets'
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-
 def write_to_json(s3_dict: dict, folder_path: str, aws_account_id: str) -> None:
     try:
         # save entities to json
         entities = s3_dict['entities']
         list_of_nodes = list(entities.values())
-        nodes_json_dump = json.dumps(list_of_nodes, indent=4)
+        nodes_json_dump = json.dumps(list_of_nodes, default=default_json_serializer, indent=4)
         with open(f'{folder_path}/{aws_account_id}_nodes.json', 'w+') as nodes_file:
             nodes_file.write(nodes_json_dump)
         nodes_file.close()
 
         relationships = s3_dict['relationships']
-        relationships_json = json.dumps(relationships, indent=4)
+        relationships_json = json.dumps(relationships, default=default_json_serializer, indent=4)
         with open(f'{folder_path}/{aws_account_id}_relationships.json', 'w+') as relationship_file:
             relationship_file.write(relationships_json)
         relationship_file.close()
@@ -254,7 +220,7 @@ def load_s3_details(bucket_data, s3_details_iter, aws_account_id, aws_update_tag
     _load_public_access_block(public_access_block_configs, aws_update_tag, s3_dict)
     _set_default_values(aws_account_id, s3_dict)
 
-    _create_folder(json_directory)
+    create_folder(json_directory)
 
     logger.warning(json_directory)
 
