@@ -47,7 +47,7 @@ from .ec2.vpc_peerings import sync_vpc_peerings
 
 RESOURCE_FUNCTIONS: Dict = {
     # 'iam': iamjson.sync,
-    # 's3': s3json.sync,
+    's3': s3json.sync,
     # 'dynamodb': dynamodb.sync,
     # 'ec2:launch_templates': sync_ec2_launch_templates,
     # 'ec2:autoscalinggroup': sync_ec2_auto_scaling_groups,

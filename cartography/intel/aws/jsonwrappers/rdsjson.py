@@ -14,7 +14,7 @@ import neo4j
 from cartography.intel.aws.rds import get_rds_cluster_data, get_rds_instance_data, _validate_rds_endpoint, \
     _get_db_subnet_group_arn, get_rds_snapshot_data, transform_rds_snapshots
 
-from cartography.intel.aws.jsonwrappers.json_utils import add_relationship, write_to_json, create_folder
+import cartography.intel.aws.jsonwrappers.json_utils as json_utils
 
 from cartography.util import dict_value_to_str
 from cartography.stats import get_stats_client
@@ -55,10 +55,11 @@ def load_rds_clusters(
         entities[cluster['DBClusterArn']] = {
             'identity': cluster['DBClusterArn'],
             'labels': ['RDSCluster'],
-            'properties': cluster
         }
+        entities[cluster['DBClusterArn']].update(cluster)
+
         # add remaining data to the properties not present in cluster
-        entities[cluster['DBClusterArn']]['properties'].update(
+        entities[cluster['DBClusterArn']].update(
             {
                 'firstseen': int(time.time()),
                 'lastupdated': aws_update_tag,
@@ -74,8 +75,7 @@ def load_rds_clusters(
             'type': 'RESOURCE'
         }
 
-        add_relationship(relationship_details, rds_dict)
-
+        json_utils.add_relationship(relationship_details, rds_dict)
 
 
 @timeit
@@ -94,9 +94,7 @@ def _attach_ec2_security_groups(neo4j_session: neo4j.Session, instances: List[Di
         entities[ec2group['group_id']] = {
             'identity': ec2group['group_id'],
             'labels': ['EC2SecurityGroup'],
-            'properties': {
-                'id': ec2group['group_id']
-            }
+            'id': ec2group['group_id']
         }
 
         relationship_details = {
@@ -105,13 +103,13 @@ def _attach_ec2_security_groups(neo4j_session: neo4j.Session, instances: List[Di
             'type': 'MEMBER_OF_EC2_SECURITY_GROUP'
         }
 
-        add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict)
 
 
 @timeit
 def _attach_ec2_subnets_to_subnetgroup(
-    neo4j_session: neo4j.Session, db_subnet_groups: List[Dict], region: str,
-    current_aws_account_id: str, aws_update_tag: int, rds_dict: dict) -> None:
+        neo4j_session: neo4j.Session, db_subnet_groups: List[Dict], region: str,
+        current_aws_account_id: str, aws_update_tag: int, rds_dict: dict) -> None:
     subnets = []
     for subnet_group in db_subnet_groups:
         for subnet in subnet_group.get('Subnets', []):
@@ -129,12 +127,10 @@ def _attach_ec2_subnets_to_subnetgroup(
         entities[subnet['sn_id']] = {
             'identity': subnet['sn_id'],
             'labels': ['EC2Subnet'],
-            'properties': {
-                'firstseen': int(time.time()),
-                'lastupdated': aws_update_tag,
-                'SubnetAvailabilityZone': subnet['az'],
-                'SubnetIdentifier': subnet['sn_id']
-            }
+            'firstseen': int(time.time()),
+            'lastupdated': aws_update_tag,
+            'SubnetAvailabilityZone': subnet['az'],
+            'SubnetIdentifier': subnet['sn_id']
         }
 
         relationship_details = {
@@ -142,14 +138,13 @@ def _attach_ec2_subnets_to_subnetgroup(
             'to_label': 'EC2Subnet', 'from_label': 'DBSubnetGroup', 'type': 'RESOURCE'
         }
 
-        add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict)
 
 
 @timeit
 def _attach_ec2_subnet_groups(
-    neo4j_session: neo4j.Session, instances: List[Dict], region: str, current_aws_account_id: str,
-    aws_update_tag: int, rds_dict: dict) -> None:
-
+        neo4j_session: neo4j.Session, instances: List[Dict], region: str, current_aws_account_id: str,
+        aws_update_tag: int, rds_dict: dict) -> None:
     db_subnet_groups = []
     for instance in instances:
         db_sng = instance['DBSubnetGroup']
@@ -162,10 +157,10 @@ def _attach_ec2_subnet_groups(
         entities[grp['arn']] = {
             'identity': grp['arn'],
             'labels': ['DBSubnetGroup'],
-            'properties': grp
         }
+        entities[grp['arn']].update(grp)
 
-        entities[grp['arn']]['properties'].update({
+        entities[grp['arn']].update({
             'firstseen': int(time.time()),
             'lastupdated': aws_update_tag,
         })
@@ -176,32 +171,33 @@ def _attach_ec2_subnet_groups(
             'type': 'MEMBER_OF_DB_SUBNET_GROUP'
         }
 
-        add_relationship(relationship_details, rds_dict)
-    _attach_ec2_subnets_to_subnetgroup(neo4j_session, db_subnet_groups, region, current_aws_account_id, aws_update_tag, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict)
+    _attach_ec2_subnets_to_subnetgroup(neo4j_session, db_subnet_groups, region, current_aws_account_id, aws_update_tag,
+                                       rds_dict)
+
 
 @timeit
 def _attach_read_replicas(neo4j_session: neo4j.Session, read_replicas: List[Dict],
                           aws_update_tag: int, rds_dict: dict) -> None:
-
     for replica in read_replicas:
         relationship_details = {
             'to_id': replica['ReadReplicaSourceDBInstanceIdentifier'], 'from_id': replica['DBInstanceArn'],
             'to_label': 'RDSInstance', 'from_label': 'RDSInstance', 'type': 'IS_READ_REPLICA_OF'
         }
 
-        add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict)
+
 
 @timeit
 def _attach_clusters(neo4j_session: neo4j.Session, cluster_members: List[Dict],
                      aws_update_tag: int, rds_dict: dict) -> None:
-
     for cluster_member in cluster_members:
         relationship_details = {
             'to_id': cluster_member['DBClusterIdentifier'], 'from_id': cluster_member['DBInstanceArn'],
             'to_label': 'RDSCluster', 'from_label': 'RDSInstance', 'type': 'IS_CLUSTER_MEMBER_OF'
         }
 
-        add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict)
 
 
 @timeit
@@ -241,8 +237,8 @@ def load_rds_instances(
         entities[rds['DBInstanceArn']] = {
             'identity': rds['DBInstanceArn'],
             'labels': ['RDSInstance'],
-            'properties': rds
         }
+        entities[rds['DBInstanceArn']].update(rds)
 
         relationship_details = {
             'to_id': rds['DBInstanceArn'],
@@ -250,12 +246,13 @@ def load_rds_instances(
             'to_label': 'RDSInstance', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
         }
 
-        add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict)
 
     _attach_ec2_security_groups(neo4j_session, secgroups, aws_update_tag, rds_dict)
     _attach_ec2_subnet_groups(neo4j_session, subnets, region, current_aws_account_id, aws_update_tag, rds_dict)
     _attach_read_replicas(neo4j_session, read_replicas, aws_update_tag, rds_dict)
     _attach_clusters(neo4j_session, clusters, aws_update_tag, rds_dict)
+
 
 @timeit
 def _attach_snapshots(neo4j_session: neo4j.Session, snapshots: List[Dict],
@@ -278,15 +275,13 @@ def _attach_snapshots(neo4j_session: neo4j.Session, snapshots: List[Dict],
             'to_label': 'RDSSnapshot', 'from_label': 'RDSInstance', 'type': 'IS_SNAPSHOT_SOURCE'
         }
 
-        add_relationship(relationship_details, rds_dict)
-
+        json_utils.add_relationship(relationship_details, rds_dict)
 
 
 @timeit
 def load_rds_snapshots(
-    neo4j_session: neo4j.Session, data: Dict, region: str, current_aws_account_id: str,
-    aws_update_tag: int, rds_dict: dict) -> None:
-
+        neo4j_session: neo4j.Session, data: Dict, region: str, current_aws_account_id: str,
+        aws_update_tag: int, rds_dict: dict) -> None:
     snapshots = transform_rds_snapshots(data)
 
     entities = rds_dict['entities']
@@ -294,52 +289,40 @@ def load_rds_snapshots(
         entities[snapshot['DBSnapshotArn']] = {
             'identity': snapshot['DBSnapshotArn'],
             'label': ['RDSSnapshot'],
-            'properties': {
-                'firstseen': int(time.time()),
-                'lastupdated': aws_update_tag,
-                'DBSnapshotArn': snapshot['DBSnapshotArn'],
-                'DBSnapshotIdentifier': snapshot['DBSnapshotIdentifier'],
-                'DBInstanceIdentifier': snapshot['DBInstanceIdentifier'],
-                'SnapshotCreateTime': snapshot['SnapshotCreateTime'],
-                'Engine': snapshot['Engine'],
-                'AllocatedStorage': snapshot['AllocatedStorage'],
-                'Status': snapshot['Status'],
-                'Port': snapshot['Port'],
-                'AvailabilityZone': snapshot['AvailabilityZone'],
-                'VpcId': snapshot['VpcId'],
-                'InstanceCreateTime': snapshot['InstanceCreateTime'],
-                'MasterUsername': snapshot['MasterUsername'],
-                'EngineVersion': snapshot['EngineVersion'],
-                'LicenseModel': snapshot['LicenseModel'],
-                'SnapshotType': snapshot['SnapshotType'],
-                'Iops': snapshot['Iops'],
-                'OptionGroupName': snapshot['OptionGroupName'],
-                'PercentProgress': snapshot['PercentProgress'],
-                'SourceRegion': snapshot['SourceRegion'],
-                'SourceDBSnapshotIdentifier': snapshot['SourceDBSnapshotIdentifier'],
-                'StorageType': snapshot['StorageType'],
-                'TdeCredentialArn': snapshot['TdeCredentialArn'],
-                'Encrypted': snapshot['Encrypted'],
-                'KmsKeyId': snapshot['KmsKeyId'],
-                'Timezone': snapshot['Timezone'],
-                'IAMDatabaseAuthenticationEnabled': snapshot['IAMDatabaseAuthenticationEnabled'],
-                'ProcessorFeatures': snapshot['ProcessorFeatures'],
-                'DbiResourceId': snapshot['DbiResourceId'],
-                'OriginalSnapshotCreateTime': snapshot['OriginalSnapshotCreateTime'],
-                'SnapshotDatabaseTime': snapshot['SnapshotDatabaseTime'],
-                'SnapshotTarget': snapshot['SnapshotTarget'],
-                'StorageThroughput': snapshot['StorageThroughput'],
-            }
+            'firstseen': int(time.time()),
+            'lastupdated': aws_update_tag,
         }
+
+        entities[snapshot['DBSnapshotArn']].update({snapshot})
 
         relationship_details = {
             'to_id': snapshot['DBSnapshotArn'], 'from_id': current_aws_account_id,
             'to_label': 'RDSSnapshot', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
         }
 
-        add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict)
 
     _attach_snapshots(neo4j_session, snapshots, aws_update_tag, rds_dict)
+
+
+def split_and_write_entities_to_json(data: dict, folder_path: str) -> None:
+    """
+    Method to split the rds_dict into sub dictionaries of entities that are similar to each other
+    """
+    entities: dict = data['entities']
+
+    subnet_groups = []
+    cluster_and_instances = []
+
+    for _, entity in entities.items():
+        l_list = entity['labels']  # list of labels
+        if 'RDSInstance' in l_list or 'RDSCluster' in l_list or 'RDSSnapshot' in l_list:
+            cluster_and_instances.append(entity)
+        if 'DBSubnetGroup' in l_list or 'EC2Subnet' in l_list or 'EC2SecurityGroup' in l_list or 'DBSubnetGroup' in l_list:
+            subnet_groups.append(entity)
+
+    json_utils.write_to_json(subnet_groups, f'{folder_path}/subnets.json')
+    json_utils.write_to_json(cluster_and_instances, f'{folder_path}/rds_cluster_instance.json')
 
 
 @timeit
@@ -367,8 +350,9 @@ def sync_rds_instances(
 
 @timeit
 def sync_rds_snapshots(
-    neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str], current_aws_account_id: str,
-    update_tag: int, common_job_parameters: Dict, rds_dict: dict
+        neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str],
+        current_aws_account_id: str,
+        update_tag: int, common_job_parameters: Dict, rds_dict: dict
 ) -> None:
     """
     Grab RDS snapshot data from AWS, ingest to neo4j, and run the cleanup job.
@@ -377,6 +361,7 @@ def sync_rds_snapshots(
         logger.info("Syncing RDS for region '%s' in account '%s'.", region, current_aws_account_id)
         data = get_rds_snapshot_data(boto3_session, region)
         load_rds_snapshots(neo4j_session, data, region, current_aws_account_id, update_tag, rds_dict)  # type: ignore
+
 
 @timeit
 def sync(
@@ -401,5 +386,51 @@ def sync(
         common_job_parameters, rds_dict
     )
 
-    create_folder(folder_path=json_directory)
-    write_to_json(rds_dict, f'{json_directory}/jsonassets/rds/', current_aws_account_id)
+    """
+    Method below to override any properties in the entities
+    format:
+    override_properties = {
+        # overrides in only entities with labels having RDSInstance
+        'RDSInstance': {
+            'BackupRetentionPeriod': 1,
+            ...
+        }
+        # overrides it in all entities
+        None: {
+            'SomePropertyName': 2
+        }
+    }
+    label tag as the key and value being the dict that contains key value pairs of properties that need to be updated
+    If the property is not found in the properties, it appends to it. To override the same property everywhere, use None
+    as the label
+    
+    """
+    json_utils.override_properties(rds_dict, properties={})
+
+    """
+    Method below removes properties that are not wanted in the entities. 
+    remove_keys = {
+        'RDSInstance': ['DBClusterMembers', ...] 
+    }
+    Multiple labels can be provided. Incase of just providing the properties and not any labels, keep the key
+    as None and provide all the properties in a single list. Keys with the None tag will be removed from all 
+    entities instead of label specific
+    remove_keys = {
+        None: ['DBClusterMembers', ...],
+        'RDSInstance': ['DBClusterMembers']
+    }
+    """
+    keys_to_remove = {
+        None: [
+            'DBClusterMembers', 'VpcSecurityGroups', 'MasterUserSecret', 'VpcSecurityGroups', 'DBSubnetGroup',
+            'OptionGroupMemberships', 'CertificateDetails', 'DBParameterGroups', 'Subnets', 'StatusInfos'
+        ]
+    }
+    json_utils.exclude_properties(rds_dict, keys_to_remove)
+
+    json_utils.create_folder(json_directory, current_aws_account_id)
+
+    folder_out_path = f'{json_directory}/jsonassets/{current_aws_account_id}/rds/'
+    # write relationships to json file
+    json_utils.write_relationship_to_json(rds_dict, folder_out_path)
+    split_and_write_entities_to_json(rds_dict, folder_out_path)

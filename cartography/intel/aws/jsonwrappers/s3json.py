@@ -7,7 +7,7 @@ from typing import List
 
 import boto3
 import neo4j
-from cartography.intel.aws.jsonwrappers.json_utils import add_relationship, default_json_serializer, create_folder
+import cartography.intel.aws.jsonwrappers.json_utils as json_utils
 from cartography.stats import get_stats_client
 from cartography.util import timeit
 from cartography.intel.aws.s3 import get_s3_bucket_list, parse_acl, parse_policy, parse_policy_statements, \
@@ -30,11 +30,11 @@ def _append_s3_configs(configs: List[Dict], update_tag: int, s3_dict: dict) -> N
     """
     entities = s3_dict['entities']
     for config in configs:
-        entities[config['bucket']]['properties'].update(config)
+        entities[config['bucket']].update(config)
         # every config contains a bucket key that should not be present in S3Bucket properties hence deleted
-        del entities[config['bucket']]['properties']['bucket']
+        del entities[config['bucket']]['bucket']
         # updating the last updated in properties
-        entities[config['bucket']]['properties']['lastupdate'] = update_tag
+        entities[config['bucket']]['lastupdate'] = update_tag
 
 
 @timeit
@@ -48,13 +48,13 @@ def _load_s3_buckets(bucket_data, aws_account_id: int, aws_update_tag: int, s3_d
 
         entities[bucket['Name']] = {
             'identity': bucket['Name'],
-            'label': [
+            'labels': [
                 'S3Bucket'
             ],
-            'properties': bucket
+            'lastupdated': aws_update_tag
 
         }
-        entities[bucket['Name']]['properties'].update({'lastupdated': aws_update_tag})
+        entities[bucket['Name']].update(bucket)
 
         relationship_details = {
             'type': 'RESOURCE',
@@ -64,7 +64,7 @@ def _load_s3_buckets(bucket_data, aws_account_id: int, aws_update_tag: int, s3_d
             'to_label': 'AWSAccount'
         }
 
-        add_relationship(relationship_details, s3_dict)
+        json_utils.add_relationship(relationship_details, s3_dict)
 
 
 def _load_s3_acls(acls: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -73,14 +73,12 @@ def _load_s3_acls(acls: List[Dict], update_tag: int, s3_dict: dict) -> None:
     for acl in acls:
         entities[acl['id']] = {
             'identity': acl['id'],
-            'label': ['S3Acl'],
-            'properties': acl,
-        }
-
-        entities[acl['id']]['properties'].update({
+            'labels': ['S3Acl'],
             'firstseen': str(datetime.datetime.now()),
             'lastupdated': update_tag
-        })
+        }
+
+        entities[acl['id']].update(acl)
 
         relationship_details = {
             'type': 'APPLIES_TO',
@@ -90,7 +88,7 @@ def _load_s3_acls(acls: List[Dict], update_tag: int, s3_dict: dict) -> None:
             'from_label': 'S3Acl'
         }
 
-        add_relationship(relationship_details, s3_dict)
+        json_utils.add_relationship(relationship_details, s3_dict)
 
 
 def _load_s3_policy_statements(statements: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -101,13 +99,11 @@ def _load_s3_policy_statements(statements: List[Dict], update_tag: int, s3_dict:
         entities[statement_id] = {
             'labels': ['S3PolicyStatement'],
             'identity': statement_id,
-            'properties': statement
+            'firstseen': str(datetime.datetime.now()),
+            'lastseen': update_tag,
         }
 
-        entities[statement_id]['properties'].update({
-            'firstseen': str(datetime.datetime.now()),
-            'lastseen': update_tag
-        })
+        entities[statement_id].update(statement)
 
         relationship_details = {
             'to_label': 'S3PolicyStatement',
@@ -117,7 +113,7 @@ def _load_s3_policy_statements(statements: List[Dict], update_tag: int, s3_dict:
             'type': 'POLICY_STATEMENT'
         }
 
-        add_relationship(relationship_details, s3_dict)
+        json_utils.add_relationship(relationship_details, s3_dict)
 
 
 def _load_s3_policies(policies: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -148,36 +144,16 @@ def _set_default_values(aws_account_id: str, s3_dict: dict) -> None:
     for connection in relationships:
         if connection['type'] == 'RESOURCE':
             bucket_name = connection['from_id']
-            if entities[bucket_name]['properties'].get('anonymous_actions') is None:
-                entities[bucket_name]['properties']['anonymous_actions'] = []
-                entities[bucket_name]['properties']['anonymous_access'] = 'false'
+            if entities[bucket_name].get('anonymous_actions') is None:
+                entities[bucket_name]['anonymous_actions'] = []
+                entities[bucket_name]['anonymous_access'] = 'false'
 
-            if entities[bucket_name]['properties'].get('default_encryption') is None:
-                entities[bucket_name]['properties']['default_encryption'] = 'false'
-
-
-def write_to_json(s3_dict: dict, folder_path: str, aws_account_id: str) -> None:
-    try:
-        # save entities to json
-        entities = s3_dict['entities']
-        list_of_nodes = list(entities.values())
-        nodes_json_dump = json.dumps(list_of_nodes, default=default_json_serializer, indent=4)
-        with open(f'{folder_path}/{aws_account_id}_nodes.json', 'w+') as nodes_file:
-            nodes_file.write(nodes_json_dump)
-        nodes_file.close()
-
-        relationships = s3_dict['relationships']
-        relationships_json = json.dumps(relationships, default=default_json_serializer, indent=4)
-        with open(f'{folder_path}/{aws_account_id}_relationships.json', 'w+') as relationship_file:
-            relationship_file.write(relationships_json)
-        relationship_file.close()
-
-    except Exception as e:
-        logger.warning("Error occurred while saving to JSON")
+            if entities[bucket_name].get('default_encryption') is None:
+                entities[bucket_name]['default_encryption'] = 'false'
 
 
 @timeit
-def load_s3_details(bucket_data, s3_details_iter, aws_account_id, aws_update_tag) -> None:
+def load_s3_details(bucket_data, s3_details_iter, aws_account_id, aws_update_tag, s3_dict: dict) -> None:
     acls: List[Dict] = []
     policies: List[Dict] = []
     statements = []
@@ -204,12 +180,6 @@ def load_s3_details(bucket_data, s3_details_iter, aws_account_id, aws_update_tag
         if parsed_public_access_block is not None:
             public_access_block_configs.append(parsed_public_access_block)
 
-    # list of relationships and nested entity dictionaries
-    s3_dict = {
-        'relationships': [],
-        'entities': {}
-    }
-
     # Load all the S3 data and insert into s3_dict
     _load_s3_buckets(bucket_data, aws_account_id, aws_update_tag, s3_dict)
     _load_s3_acls(acls, aws_update_tag, s3_dict)
@@ -220,22 +190,73 @@ def load_s3_details(bucket_data, s3_details_iter, aws_account_id, aws_update_tag
     _load_public_access_block(public_access_block_configs, aws_update_tag, s3_dict)
     _set_default_values(aws_account_id, s3_dict)
 
-    create_folder(json_directory)
 
-    logger.warning(json_directory)
+def split_and_write_to_json(data: dict, folder_path: str) -> None:
+    s3_acls = []
+    s3_policy_statements = []
+    s3_buckets = []
 
-    write_to_json(s3_dict, f'{json_directory}/jsonassets/', aws_account_id)
+    entities = data['entities']
 
+    for entity in entities.values():
+        l_list = entity['labels']
+        if 'S3Acl' in l_list:
+            s3_acls.append(entity)
+        if 'S3Bucket' in l_list:
+            s3_buckets.append(entity)
+        if 'S3PolicyStatement' in l_list:
+            s3_policy_statements.append(entity)
+
+    json_utils.write_to_json(s3_buckets, f'{folder_path}/s3buckets.json')
+    json_utils.write_to_json(s3_acls, f'{folder_path}/s3acls.json')
+    json_utils.write_to_json(s3_policy_statements, f'{folder_path}/s3policystatements.json')
 
 @timeit
 def sync(
         neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str],
         current_aws_account_id: str,
-        update_tag: int, common_job_parameters: Dict,
-) -> None:
+        update_tag: int, common_job_parameters: Dict) -> None:
+
+    # list of relationships and nested entity dictionaries
+    s3_dict = {
+        'relationships': [],
+        'entities': {}
+    }
+
     logger.info("Syncing S3 for account '%s'.", current_aws_account_id)
     bucket_data = get_s3_bucket_list(boto3_session)
     acl_and_policy_data_iter = get_s3_bucket_details(boto3_session, bucket_data)
-    load_s3_details(bucket_data, acl_and_policy_data_iter, current_aws_account_id, update_tag)
+    load_s3_details(bucket_data, acl_and_policy_data_iter, current_aws_account_id, update_tag, s3_dict)
+
+    """
+    Methods to override and exclude properties not needed to be written in json files
+    format is as follows:
+    
+    Dict format for properties that need to be excluded. The key is the label and value is a list
+    exclude_properties = {
+        # to remove properties from specific labels
+        'S3Acl': ['lastudpated',...],
+        # to remove properties from all entities regardless of what labels they have
+        None: ['lastupdated', 'firstseeen']
+    }
+    
+    override_properties = {
+        # override property wherever its found in any entity
+        None: {
+            'SomeProperty': 1
+        }
+        # override properties in specific labels
+        'S3Bucket': {
+            'SomeProperty': 1
+        }
+    }
+    """
+    json_utils.override_properties(s3_dict, properties={})
+    json_utils.exclude_properties(s3_dict, properties={})
+
+    json_utils.create_folder(json_directory, current_aws_account_id)
+    # write relationships for S3
+    json_utils.write_relationship_to_json(s3_dict, f'{json_directory}/jsonassets/{current_aws_account_id}/s3/')
+    split_and_write_to_json(s3_dict, f'{json_directory}/jsonassets/{current_aws_account_id}/s3/')
 
     logger.info("S3 sync completed for account '%s'.", current_aws_account_id)
