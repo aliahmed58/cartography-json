@@ -18,6 +18,7 @@ from . import lambda_function
 from . import permission_relationships
 from . import rds
 from .jsonwrappers import rdsjson
+from .jsonwrappers import redshiftjson
 from . import redshift
 from . import resourcegroupstaggingapi
 from . import route53
@@ -49,7 +50,7 @@ from .ec2.vpc_peerings import sync_vpc_peerings
 RESOURCE_FUNCTIONS: Dict = {
     # 'iam': iamjson.sync,
     # 's3': s3json.sync,
-    'dynamodb': dynamodbjson.sync,
+    # 'dynamodb': dynamodbjson.sync,
     # 'ec2:launch_templates': sync_ec2_launch_templates,
     # 'ec2:autoscalinggroup': sync_ec2_auto_scaling_groups,
     # # `ec2:instance` must be included before `ssm` and `ec2:images`,
@@ -78,7 +79,7 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'lambda_function': lambda_function.sync,
     # 'kms': kms.sync,
     # 'rds': rdsjson.sync,
-    # 'redshift': redshift.sync,
+    'redshift': redshiftjson.sync,
     # 'route53': route53.sync,
     # 'elasticsearch': elasticsearch.sync,
     # 'permission_relationships': permission_relationships.sync,
