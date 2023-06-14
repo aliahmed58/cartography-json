@@ -1,9 +1,6 @@
 import datetime
-import json
 import logging
-import pprint
 import time
-from typing import Any
 import os
 from typing import Dict
 from typing import List
@@ -16,13 +13,8 @@ from cartography.intel.aws.rds import get_rds_cluster_data, get_rds_instance_dat
 
 import cartography.intel.aws.jsonwrappers.json_utils as json_utils
 
-from cartography.util import dict_value_to_str
 from cartography.stats import get_stats_client
-from cartography.util import aws_handle_regions
-from cartography.util import aws_paginate
 from cartography.util import dict_value_to_str
-from cartography.util import merge_module_sync_metadata
-from cartography.util import run_cleanup_job
 from cartography.util import timeit
 
 logger = logging.getLogger(__name__)

@@ -104,7 +104,8 @@ def create_folder(folder_path: str, current_aws_account_id: str) -> None:
     """
     parent_common_path = f'{folder_path}/jsonassets/{current_aws_account_id}'
     folders = [
-        f'{folder_path}/jsonassets/', parent_common_path, f'{parent_common_path}/rds/', f'{parent_common_path}/s3/']
+        f'{folder_path}/jsonassets/', parent_common_path, f'{parent_common_path}/rds/', f'{parent_common_path}/s3/',
+        f'{parent_common_path}/dynamodb/']
     for folder in folders:
         if not os.path.exists(folder):
             os.makedirs(folder)
