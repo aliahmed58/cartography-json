@@ -25,6 +25,7 @@ from . import redshift
 from . import resourcegroupstaggingapi
 from . import route53
 from .jsonwrappers import s3json
+from .jsonwrappers import secretsmanagerjson
 from . import secretsmanager
 from . import securityhub
 from . import sqs
@@ -75,7 +76,7 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'ecr': ecr.sync,
     # 'ecs': ecs.sync,
     # 'eks': eks.sync,
-    'elasticache': elasticachejson.sync,
+    # 'elasticache': elasticachejson.sync,
     # 'elastic_ip_addresses': sync_elastic_ip_addresses,
     # 'emr': emr.sync,
     # 'lambda_function': lambda_function.sync,
@@ -87,7 +88,7 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'permission_relationships': permission_relationships.sync,
     # 'resourcegroupstaggingapi': resourcegroupstaggingapi.sync,
     # 'apigateway': apigateway.sync,
-    # 'secretsmanager': secretsmanager.sync,
+    'secretsmanager': secretsmanagerjson.sync,
     # 'securityhub': securityhub.sync,
     # 'sqs': sqs.sync,
     # 'ssm': ssm.sync,
