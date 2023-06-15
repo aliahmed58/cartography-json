@@ -59,7 +59,7 @@ def split_and_write_to_json(es_cache_dict: Dict, folder_path: str) -> None:
     es_clusters = []
     es_topics = []
 
-    for _, entity in entities.values():
+    for _, entity in entities.items():
         l_list = entity['labels']
         if 'ElasticacheCluster' in l_list:
             es_clusters.append(entity)
