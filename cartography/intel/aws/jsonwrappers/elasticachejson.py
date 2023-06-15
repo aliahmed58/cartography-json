@@ -53,6 +53,22 @@ def _attach_topic_to_aws_account(es_cache_dict: Dict, cluster: Dict, aws_account
     json_utils.add_relationship(relationship_details, es_cache_dict)
 
 
+def split_and_write_to_json(es_cache_dict: Dict, folder_path: str) -> None:
+    entities = es_cache_dict['entities']
+
+    es_clusters = []
+    es_topics = []
+
+    for _, entity in entities.values():
+        l_list = entity['labels']
+        if 'ElasticacheCluster' in l_list:
+            es_clusters.append(entity)
+        if 'ElasticacheTopic' in l_list:
+            es_topics.append(entity)
+
+    json_utils.write_to_json(es_clusters, f'{folder_path}/ElastiCacheClusters.json')
+    json_utils.write_to_json(es_topics, f'{folder_path}/ElastiCacheTopics.json')
+
 @timeit
 def load_elasticache_clusters(
     neo4j_session: neo4j.Session, clusters: List[Dict], region: str,
@@ -132,4 +148,4 @@ def sync(
 
     json_utils.write_relationship_to_json(es_cache_dict, folder_path)
     es_cache_list = list(es_cache_dict['entities'].values())
-    json_utils.write_to_json(es_cache_list, f'{folder_path}/ElastiCache.json')
+    split_and_write_to_json(es_cache_dict, folder_path)
