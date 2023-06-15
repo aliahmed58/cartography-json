@@ -6,11 +6,14 @@ import os
 
 logger = logging.getLogger(__name__)
 
+out_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+
 
 def add_relationship(relationship_details: dict, source_dict: dict) -> None:
     """
     :param relationship_details: details of relationship between two entities
     :param source_dict: the s3_dict that holds all the entities and relationships
+    :param aws_update_tag aws update tag to set the last updated field
     :return: None
     """
     relationships = source_dict['relationships']
@@ -105,7 +108,7 @@ def create_folder(folder_path: str, current_aws_account_id: str) -> None:
     parent_common_path = f'{folder_path}/jsonassets/{current_aws_account_id}'
     folders = [
         f'{folder_path}/jsonassets/', parent_common_path, f'{parent_common_path}/rds/', f'{parent_common_path}/s3/',
-        f'{parent_common_path}/dynamodb/', f'{parent_common_path}/redshift/']
+        f'{parent_common_path}/dynamodb/', f'{parent_common_path}/redshift/', f'{parent_common_path}/elasticache/']
     for folder in folders:
         if not os.path.exists(folder):
             os.makedirs(folder)

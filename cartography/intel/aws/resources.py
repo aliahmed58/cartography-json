@@ -7,7 +7,9 @@ from . import dynamodb
 from . import ecr
 from . import ecs
 from . import eks
+from .jsonwrappers import elasticachejson
 from . import elasticache
+from .jsonwrappers import elasticsearchjson
 from . import elasticsearch
 from . import emr
 from . import iam
@@ -73,13 +75,13 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'ecr': ecr.sync,
     # 'ecs': ecs.sync,
     # 'eks': eks.sync,
-    # 'elasticache': elasticache.sync,
+    'elasticache': elasticachejson.sync,
     # 'elastic_ip_addresses': sync_elastic_ip_addresses,
     # 'emr': emr.sync,
     # 'lambda_function': lambda_function.sync,
     # 'kms': kms.sync,
     # 'rds': rdsjson.sync,
-    'redshift': redshiftjson.sync,
+    # 'redshift': redshiftjson.sync,
     # 'route53': route53.sync,
     # 'elasticsearch': elasticsearch.sync,
     # 'permission_relationships': permission_relationships.sync,
