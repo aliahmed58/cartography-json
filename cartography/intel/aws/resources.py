@@ -4,6 +4,7 @@ from . import apigateway
 from . import config
 from .jsonwrappers import dynamodb_json
 from . import dynamodb
+from .jsonwrappers import ecr_json
 from . import ecr
 from . import ecs
 from . import eks
@@ -74,7 +75,7 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'ec2:reserved_instances': sync_ec2_reserved_instances,
     # 'ec2:volumes': sync_ebs_volumes,
     # 'ec2:snapshots': sync_ebs_snapshots,
-    # 'ecr': ecr.sync,
+    'ecr': ecr_json.sync,
     # 'ecs': ecs.sync,
     # 'eks': eks.sync,
     # 'elasticache': elasticache.sync,
@@ -85,7 +86,7 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'rds': rdsjson.sync,
     # 'redshift': redshiftjson.sync,
     # 'route53': route53.sync,
-    'elasticsearch': elasticsearch.sync,
+    # 'elasticsearch': elasticsearch.sync,
     # 'permission_relationships': permission_relationships.sync,
     # 'resourcegroupstaggingapi': resourcegroupstaggingapi.sync,
     # 'apigateway': apigateway.sync,

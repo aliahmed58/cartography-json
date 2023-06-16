@@ -39,8 +39,8 @@ def get_ecr_repository_images(boto3_session: boto3.session.Session, region: str,
 
 @timeit
 def load_ecr_repositories(
-    neo4j_session: neo4j.Session, repos: List[Dict], region: str, current_aws_account_id: str,
-    aws_update_tag: int,
+        neo4j_session: neo4j.Session, repos: List[Dict], region: str, current_aws_account_id: str,
+        aws_update_tag: int,
 ) -> None:
     query = """
     UNWIND $Repositories as ecr_repo
@@ -91,8 +91,8 @@ def transform_ecr_repository_images(repo_data: Dict) -> List[Dict]:
 
 
 def _load_ecr_repo_img_tx(
-    tx: neo4j.Transaction, repo_images_list: List[Dict], aws_update_tag: int,
-    region: str,
+        tx: neo4j.Transaction, repo_images_list: List[Dict], aws_update_tag: int,
+        region: str,
 ) -> None:
     query = """
     UNWIND $RepoList as repo_img
@@ -125,8 +125,8 @@ def _load_ecr_repo_img_tx(
 
 @timeit
 def load_ecr_repository_images(
-    neo4j_session: neo4j.Session, repo_images_list: List[Dict], region: str,
-    aws_update_tag: int,
+        neo4j_session: neo4j.Session, repo_images_list: List[Dict], region: str,
+        aws_update_tag: int,
 ) -> None:
     logger.info(f"Loading {len(repo_images_list)} ECR repository images in {region} into graph.")
     for repo_image_batch in batch(repo_images_list, size=10000):
@@ -140,10 +140,8 @@ def cleanup(neo4j_session: neo4j.Session, common_job_parameters: Dict) -> None:
 
 
 @timeit
-def sync(
-    neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str], current_aws_account_id: str,
-    update_tag: int, common_job_parameters: Dict,
-) -> None:
+def sync(neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str],
+         current_aws_account_id: str, update_tag: int, common_job_parameters: Dict) -> None:
     for region in regions:
         logger.info("Syncing ECR for region '%s' in account '%s'.", region, current_aws_account_id)
         image_data = {}

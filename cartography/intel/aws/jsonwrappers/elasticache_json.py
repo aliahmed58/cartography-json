@@ -20,6 +20,7 @@ stat_handler = get_stats_client(__name__)
 
 service_name = 'elasticache'
 
+
 def _attach_ecluster_to_aws_account(es_cache_dict: Dict, cluster: Dict, aws_account_id: str, aws_update_tag: int) -> None:
     relationship_details = {
         'to_id': cluster['ARN'], 'from_id': aws_account_id,
