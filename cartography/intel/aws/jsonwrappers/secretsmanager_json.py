@@ -8,19 +8,17 @@ import neo4j
 
 import cartography.intel.aws.jsonwrappers.json_utils as json_utils
 
-from cartography.util import aws_handle_regions
-from cartography.util import dict_date_to_epoch
-from cartography.util import run_cleanup_job
 from cartography.util import timeit
 from cartography.intel.aws.secretsmanager import get_secret_list
+from cartography.intel.aws.jsonwrappers.service_enum import AWSServices
 
 logger = logging.getLogger(__name__)
 
+
 @timeit
 def load_secrets(
-    neo4j_session: neo4j.Session, data: List[Dict], region: str, current_aws_account_id: str,
-    aws_update_tag: int, secrets_dict) -> None:
-
+        neo4j_session: neo4j.Session, data: List[Dict], region: str, current_aws_account_id: str,
+        aws_update_tag: int, secrets_dict) -> None:
     entities = secrets_dict['entities']
     for secret in data:
         entities[secret['ARN']] = {
@@ -40,11 +38,13 @@ def load_secrets(
         }
 
         json_utils.add_relationship(relationship_details, secrets_dict, aws_update_tag)
+
+
 @timeit
 def sync(
-    neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str], current_aws_account_id: str,
-    update_tag: int, common_job_parameters: Dict) -> None:
-
+        neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str],
+        current_aws_account_id: str,
+        update_tag: int, common_job_parameters: Dict) -> None:
     secrets_dict: Dict = {
         'entities': {},
         'relationships': []
@@ -76,9 +76,10 @@ def sync(
     }
     json_utils.exclude_properties(secrets_dict, remove_properties)
 
-    json_utils.create_folder('secretsmanager', current_aws_account_id)
+    json_utils.create_folder(AWSServices.SECRETS_MANAGER.value, current_aws_account_id)
 
-    json_utils.write_relationship_to_json(secrets_dict, 'secretsmanager', current_aws_account_id)
+    json_utils.write_relationship_to_json(secrets_dict, AWSServices.SECRETS_MANAGER.value, current_aws_account_id)
 
     secrets_list = list(secrets_dict['entities'].values())
-    json_utils.write_to_json(secrets_list, 'secretsmanager.json', 'secretsmanager', current_aws_account_id)
+    json_utils.write_to_json(secrets_list, 'secretsmanager.json',
+                             AWSServices.SECRETS_MANAGER.value, current_aws_account_id)

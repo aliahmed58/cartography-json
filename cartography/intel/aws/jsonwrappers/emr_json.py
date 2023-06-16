@@ -8,6 +8,7 @@ import boto3
 import botocore.exceptions
 import neo4j
 import cartography.intel.aws.jsonwrappers.json_utils as json_utils
+from cartography.intel.aws.jsonwrappers.service_enum import AWSServices
 
 from cartography.intel.aws.emr import get_emr_clusters, get_emr_describe_cluster
 from cartography.util import timeit
@@ -98,8 +99,8 @@ def sync(
     json_utils.create_folder('emr', current_aws_account_id)
 
     # write relationships to json file
-    json_utils.write_relationship_to_json(emr_dict, 'emr', current_aws_account_id)
+    json_utils.write_relationship_to_json(emr_dict, AWSServices.EMR.value, current_aws_account_id)
 
     # write entities to json file
     emr_entities_list = list(emr_dict['entities'].values())
-    json_utils.write_to_json(emr_entities_list, 'emr.json', 'emr', current_aws_account_id)
+    json_utils.write_to_json(emr_entities_list, 'emr.json', AWSServices.EMR.value, current_aws_account_id)

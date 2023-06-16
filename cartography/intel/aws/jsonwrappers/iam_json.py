@@ -10,6 +10,7 @@ from typing import Tuple
 import boto3
 import neo4j
 
+from cartography.intel.aws.jsonwrappers.service_enum import AWSServices
 from cartography.intel.aws.permission_relationships import parse_statement_node
 from cartography.intel.aws.permission_relationships import principal_allowed_on_resource
 from cartography.stats import get_stats_client

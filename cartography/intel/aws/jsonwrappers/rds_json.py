@@ -8,6 +8,7 @@ from typing import List
 import boto3
 import neo4j
 
+from cartography.intel.aws.jsonwrappers.service_enum import AWSServices
 from cartography.intel.aws.rds import get_rds_cluster_data, get_rds_instance_data, _validate_rds_endpoint, \
     _get_db_subnet_group_arn, get_rds_snapshot_data, transform_rds_snapshots
 
@@ -313,8 +314,8 @@ def split_and_write_entities_to_json(data: dict, aws_acc_id: str) -> None:
         if 'DBSubnetGroup' in l_list or 'EC2Subnet' in l_list or 'EC2SecurityGroup' in l_list or 'DBSubnetGroup' in l_list:
             subnet_groups.append(entity)
 
-    json_utils.write_to_json(subnet_groups, 'subnets.json', 'rds', aws_acc_id)
-    json_utils.write_to_json(cluster_and_instances, 'rds_cluster_instance.json', 'rds', aws_acc_id)
+    json_utils.write_to_json(subnet_groups, 'subnets.json', AWSServices.RDS.value, aws_acc_id)
+    json_utils.write_to_json(cluster_and_instances, 'rds_cluster_instance.json', AWSServices.RDS.value, aws_acc_id)
 
 
 @timeit
@@ -420,8 +421,8 @@ def sync(
     }
     json_utils.exclude_properties(rds_dict, keys_to_remove)
 
-    json_utils.create_folder('rds', current_aws_account_id)
+    json_utils.create_folder(AWSServices.RDS.value, current_aws_account_id)
 
     # write relationships to json file
-    json_utils.write_relationship_to_json(rds_dict, 'rds', current_aws_account_id)
+    json_utils.write_relationship_to_json(rds_dict, AWSServices.RDS.value, current_aws_account_id)
     split_and_write_entities_to_json(rds_dict, current_aws_account_id)

@@ -8,10 +8,9 @@ import boto3
 import neo4j
 
 from cartography.intel.aws.redshift import get_redshift_cluster_data, transform_redshift_cluster_data
+from cartography.intel.aws.jsonwrappers.service_enum import AWSServices
 
 import cartography.intel.aws.jsonwrappers.json_utils as json_utils
-from cartography.util import aws_handle_regions
-from cartography.util import run_cleanup_job
 from cartography.util import timeit
 
 logger = logging.getLogger(__name__)
@@ -129,9 +128,9 @@ def sync(neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, reg
     json_utils.override_properties(redshift_dict, properties={})
 
     # write to json files
-    json_utils.create_folder('redshift', current_aws_account_id)
+    json_utils.create_folder(AWSServices.REDSHIFT.value, current_aws_account_id)
 
-    json_utils.write_relationship_to_json(redshift_dict, 'redshift', current_aws_account_id)
+    json_utils.write_relationship_to_json(redshift_dict, AWSServices.REDSHIFT.value, current_aws_account_id)
     redshift_list = list(redshift_dict['entities'].values())
-    json_utils.write_to_json(redshift_list, 'redshift.json', 'redshift', current_aws_account_id)
+    json_utils.write_to_json(redshift_list, 'redshift.json', AWSServices.REDSHIFT.value, current_aws_account_id)
 

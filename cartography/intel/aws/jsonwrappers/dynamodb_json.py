@@ -6,6 +6,7 @@ import json
 from typing import Dict
 from typing import List
 from typing import Any
+from cartography.intel.aws.jsonwrappers.service_enum import AWSServices
 
 import boto3
 import neo4j
@@ -140,11 +141,11 @@ def sync(
     """
     json_utils.override_properties(dynamo_dict, properties={})
     json_utils.exclude_properties(dynamo_dict, properties={})
-    json_utils.create_folder('dynamodb', current_aws_account_id)
+    json_utils.create_folder(AWSServices.DYNAMO_DB.value, current_aws_account_id)
 
     # write relationships to json
-    json_utils.write_relationship_to_json(dynamo_dict, 'dynamodb', current_aws_account_id)
+    json_utils.write_relationship_to_json(dynamo_dict, AWSServices.DYNAMO_DB.value, current_aws_account_id)
 
     # write nodes to json
     dynamo_list: list[dict] = list(dynamo_dict['entities'].values())
-    json_utils.write_to_json(dynamo_list, 'dynamodb.json', 'dynamodb', current_aws_account_id)
+    json_utils.write_to_json(dynamo_list, 'dynamodb.json', AWSServices.DYNAMO_DB.value, current_aws_account_id)

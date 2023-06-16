@@ -12,6 +12,7 @@ from cartography.stats import get_stats_client
 from cartography.util import timeit
 from cartography.intel.aws.s3 import get_s3_bucket_list, parse_acl, parse_policy, parse_policy_statements, \
     parse_encryption, parse_versioning, parse_public_access_block, get_s3_bucket_details
+from cartography.intel.aws.jsonwrappers.service_enum import AWSServices
 
 import os
 
@@ -31,8 +32,6 @@ def _append_s3_configs(configs: List[Dict], update_tag: int, s3_dict: dict) -> N
     entities = s3_dict['entities']
     for config in configs:
         entities[config['bucket']].update(config)
-        # every config contains a bucket key that should not be present in S3Bucket properties hence deleted
-        del entities[config['bucket']]['bucket']
         # updating the last updated in properties
         entities[config['bucket']]['lastupdate'] = update_tag
 
@@ -207,9 +206,9 @@ def split_and_write_to_json(data: dict, aws_acc_id: str) -> None:
         if 'S3PolicyStatement' in l_list:
             s3_policy_statements.append(entity)
 
-    json_utils.write_to_json(s3_buckets, 's3buckets.json', 's3', aws_acc_id)
-    json_utils.write_to_json(s3_acls, 's3acls.json', 's3', aws_acc_id)
-    json_utils.write_to_json(s3_policy_statements, 's3policystatements.json', 's3', aws_acc_id)
+    json_utils.write_to_json(s3_buckets, 's3buckets.json', AWSServices.S3.value, aws_acc_id)
+    json_utils.write_to_json(s3_acls, 's3acls.json', AWSServices.S3.value, aws_acc_id)
+    json_utils.write_to_json(s3_policy_statements, 's3policystatements.json', AWSServices.S3.value, aws_acc_id)
 
 @timeit
 def sync(
@@ -254,9 +253,9 @@ def sync(
     json_utils.override_properties(s3_dict, properties={})
     json_utils.exclude_properties(s3_dict, properties={})
 
-    json_utils.create_folder('s3', current_aws_account_id)
+    json_utils.create_folder(AWSServices.S3.value, current_aws_account_id)
     # write relationships for S3
-    json_utils.write_relationship_to_json(s3_dict, 's3', current_aws_account_id)
+    json_utils.write_relationship_to_json(s3_dict, AWSServices.S3.value, current_aws_account_id)
     split_and_write_to_json(s3_dict, current_aws_account_id)
 
     logger.info("S3 sync completed for account '%s'.", current_aws_account_id)

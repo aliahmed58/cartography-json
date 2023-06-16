@@ -3,6 +3,7 @@ import logging
 import time
 from typing import Dict
 from typing import List
+from cartography.intel.aws.jsonwrappers.service_enum import AWSServices
 
 import boto3
 import neo4j
@@ -13,8 +14,6 @@ from cartography.util import batch
 from cartography.util import timeit
 
 logger = logging.getLogger(__name__)
-
-SERVICE_NAME = 'ecr'
 
 
 @timeit
@@ -111,8 +110,8 @@ def split_and_write_to_json(ecr_dict: Dict, aws_acc_id: str) -> None:
         if 'ECRImage' in l_list or 'ECRRepositoryImage' in l_list:
             ecr_images_and_image_repos.append(entity)
 
-    json_utils.write_to_json(ecr_repos, 'ecr_repos.json', 'ecr', aws_acc_id)
-    json_utils.write_to_json(ecr_images_and_image_repos, 'ecr_image_repos.json', 'ecr', aws_acc_id)
+    json_utils.write_to_json(ecr_repos, 'ecr_repos.json', AWSServices.ECR.value, aws_acc_id)
+    json_utils.write_to_json(ecr_images_and_image_repos, 'ecr_image_repos.json', AWSServices.ECR.value, aws_acc_id)
 
 
 @timeit
@@ -158,10 +157,10 @@ def sync(
     json_utils.exclude_properties(ecr_dict, excluded_properties)
 
     # create folders
-    json_utils.create_folder(SERVICE_NAME, current_aws_account_id)
+    json_utils.create_folder(AWSServices.ECR.value, current_aws_account_id)
 
     # write relationships to json
-    json_utils.write_relationship_to_json(ecr_dict, SERVICE_NAME, current_aws_account_id)
+    json_utils.write_relationship_to_json(ecr_dict, AWSServices.ECR.value, current_aws_account_id)
 
     # write nodes to json
     split_and_write_to_json(ecr_dict, current_aws_account_id)
