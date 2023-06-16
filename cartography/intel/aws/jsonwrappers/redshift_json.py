@@ -27,7 +27,7 @@ def _attach_ec2_security_groups(neo4j_session: neo4j.Session, cluster: Dict,
             'type': 'MEMBER_OF_EC2_SECURITY_GROUP'
         }
 
-        json_utils.add_relationship(relationship_details, redshift_dict)
+        json_utils.add_relationship(relationship_details, redshift_dict, aws_update_tag)
 
 @timeit
 def _attach_iam_roles(neo4j_session: neo4j.Session, cluster: Dict,
@@ -38,7 +38,7 @@ def _attach_iam_roles(neo4j_session: neo4j.Session, cluster: Dict,
             'to_label': 'AWSPrincipal', 'from_label': 'RedshiftCluster', 'type': 'STS_ASSUMEROLE_ALLOW'
         }
 
-        json_utils.add_relationship(relationship_details, redshift_dict)
+        json_utils.add_relationship(relationship_details, redshift_dict, aws_update_tag)
 
 @timeit
 def _attach_aws_vpc(neo4j_session: neo4j.Session, cluster: Dict, aws_update_tag: int, redshift_dict: dict) -> None:
@@ -47,7 +47,7 @@ def _attach_aws_vpc(neo4j_session: neo4j.Session, cluster: Dict, aws_update_tag:
             'to_id': cluster['VpcId'], 'from_id': cluster['arn'],
             'to_label': 'AWSVpc', 'from_label': 'RedshiftCluster', 'type': 'MEMBER_OF_AWS_VPC '
         }
-        json_utils.add_relationship(relationship_details, redshift_dict)
+        json_utils.add_relationship(relationship_details, redshift_dict, aws_update_tag)
 
 
 @timeit
@@ -72,7 +72,7 @@ def load_redshift_cluster_data(
             'to_id': cluster['arn'], 'from_id': current_aws_account_id,
             'to_label': 'RedshiftCluster', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
         }
-        json_utils.add_relationship(relationship_details, redshift_dict)
+        json_utils.add_relationship(relationship_details, redshift_dict, aws_update_tag)
 
         _attach_ec2_security_groups(neo4j_session, cluster, aws_update_tag, redshift_dict)
         _attach_iam_roles(neo4j_session, cluster, aws_update_tag, redshift_dict)
@@ -129,10 +129,9 @@ def sync(neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, reg
     json_utils.override_properties(redshift_dict, properties={})
 
     # write to json files
-    folder_out_path = f'{json_directory}/jsonassets/{current_aws_account_id}/redshift/'
-    json_utils.create_folder(json_directory, current_aws_account_id)
+    json_utils.create_folder('redshift', current_aws_account_id)
 
-    json_utils.write_relationship_to_json(redshift_dict, folder_out_path)
+    json_utils.write_relationship_to_json(redshift_dict, 'redshift', current_aws_account_id)
     redshift_list = list(redshift_dict['entities'].values())
-    json_utils.write_to_json(redshift_list, f'{folder_out_path}/redshift.json')
+    json_utils.write_to_json(redshift_list, 'redshift.json', 'redshift', current_aws_account_id)
 

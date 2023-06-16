@@ -64,7 +64,7 @@ def _load_s3_buckets(bucket_data, aws_account_id: int, aws_update_tag: int, s3_d
             'to_label': 'AWSAccount'
         }
 
-        json_utils.add_relationship(relationship_details, s3_dict)
+        json_utils.add_relationship(relationship_details, s3_dict, aws_update_tag)
 
 
 def _load_s3_acls(acls: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -88,7 +88,7 @@ def _load_s3_acls(acls: List[Dict], update_tag: int, s3_dict: dict) -> None:
             'from_label': 'S3Acl'
         }
 
-        json_utils.add_relationship(relationship_details, s3_dict)
+        json_utils.add_relationship(relationship_details, s3_dict, update_tag)
 
 
 def _load_s3_policy_statements(statements: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -113,7 +113,7 @@ def _load_s3_policy_statements(statements: List[Dict], update_tag: int, s3_dict:
             'type': 'POLICY_STATEMENT'
         }
 
-        json_utils.add_relationship(relationship_details, s3_dict)
+        json_utils.add_relationship(relationship_details, s3_dict, update_tag)
 
 
 def _load_s3_policies(policies: List[Dict], update_tag: int, s3_dict: dict) -> None:
@@ -191,7 +191,7 @@ def load_s3_details(bucket_data, s3_details_iter, aws_account_id, aws_update_tag
     _set_default_values(aws_account_id, s3_dict)
 
 
-def split_and_write_to_json(data: dict, folder_path: str) -> None:
+def split_and_write_to_json(data: dict, aws_acc_id: str) -> None:
     s3_acls = []
     s3_policy_statements = []
     s3_buckets = []
@@ -207,9 +207,9 @@ def split_and_write_to_json(data: dict, folder_path: str) -> None:
         if 'S3PolicyStatement' in l_list:
             s3_policy_statements.append(entity)
 
-    json_utils.write_to_json(s3_buckets, f'{folder_path}/s3buckets.json')
-    json_utils.write_to_json(s3_acls, f'{folder_path}/s3acls.json')
-    json_utils.write_to_json(s3_policy_statements, f'{folder_path}/s3policystatements.json')
+    json_utils.write_to_json(s3_buckets, 's3buckets.json', 's3', aws_acc_id)
+    json_utils.write_to_json(s3_acls, 's3acls.json', 's3', aws_acc_id)
+    json_utils.write_to_json(s3_policy_statements, 's3policystatements.json', 's3', aws_acc_id)
 
 @timeit
 def sync(
@@ -254,9 +254,9 @@ def sync(
     json_utils.override_properties(s3_dict, properties={})
     json_utils.exclude_properties(s3_dict, properties={})
 
-    json_utils.create_folder(json_directory, current_aws_account_id)
+    json_utils.create_folder('s3', current_aws_account_id)
     # write relationships for S3
-    json_utils.write_relationship_to_json(s3_dict, f'{json_directory}/jsonassets/{current_aws_account_id}/s3/')
-    split_and_write_to_json(s3_dict, f'{json_directory}/jsonassets/{current_aws_account_id}/s3/')
+    json_utils.write_relationship_to_json(s3_dict, 's3', current_aws_account_id)
+    split_and_write_to_json(s3_dict, current_aws_account_id)
 
     logger.info("S3 sync completed for account '%s'.", current_aws_account_id)

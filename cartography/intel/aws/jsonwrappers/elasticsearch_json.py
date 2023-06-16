@@ -56,7 +56,7 @@ def _load_es_domains(
             'to_id': domain_id, 'from_id': aws_account_id,
             'to_label': 'ESDomain', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
         }
-        json_utils.add_relationship(relationship_details, es_dict)
+        json_utils.add_relationship(relationship_details, es_dict, aws_update_tag)
 
         _link_es_domains_to_dns(neo4j_session, domain_id, domain, aws_update_tag, es_dict)
         # _link_es_domain_vpc(neo4j_session, domain_id, domain, aws_update_tag)

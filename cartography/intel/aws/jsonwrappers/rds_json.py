@@ -67,7 +67,7 @@ def load_rds_clusters(
             'type': 'RESOURCE'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
 
 
 @timeit
@@ -95,7 +95,7 @@ def _attach_ec2_security_groups(neo4j_session: neo4j.Session, instances: List[Di
             'type': 'MEMBER_OF_EC2_SECURITY_GROUP'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
 
 
 @timeit
@@ -130,7 +130,7 @@ def _attach_ec2_subnets_to_subnetgroup(
             'to_label': 'EC2Subnet', 'from_label': 'DBSubnetGroup', 'type': 'RESOURCE'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
 
 
 @timeit
@@ -163,7 +163,7 @@ def _attach_ec2_subnet_groups(
             'type': 'MEMBER_OF_DB_SUBNET_GROUP'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
     _attach_ec2_subnets_to_subnetgroup(neo4j_session, db_subnet_groups, region, current_aws_account_id, aws_update_tag,
                                        rds_dict)
 
@@ -177,7 +177,7 @@ def _attach_read_replicas(neo4j_session: neo4j.Session, read_replicas: List[Dict
             'to_label': 'RDSInstance', 'from_label': 'RDSInstance', 'type': 'IS_READ_REPLICA_OF'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
 
 
 @timeit
@@ -189,7 +189,7 @@ def _attach_clusters(neo4j_session: neo4j.Session, cluster_members: List[Dict],
             'to_label': 'RDSCluster', 'from_label': 'RDSInstance', 'type': 'IS_CLUSTER_MEMBER_OF'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
 
 
 @timeit
@@ -238,7 +238,7 @@ def load_rds_instances(
             'to_label': 'RDSInstance', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
 
     _attach_ec2_security_groups(neo4j_session, secgroups, aws_update_tag, rds_dict)
     _attach_ec2_subnet_groups(neo4j_session, subnets, region, current_aws_account_id, aws_update_tag, rds_dict)
@@ -267,7 +267,7 @@ def _attach_snapshots(neo4j_session: neo4j.Session, snapshots: List[Dict],
             'to_label': 'RDSSnapshot', 'from_label': 'RDSInstance', 'type': 'IS_SNAPSHOT_SOURCE'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
 
 
 @timeit
@@ -292,12 +292,12 @@ def load_rds_snapshots(
             'to_label': 'RDSSnapshot', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
         }
 
-        json_utils.add_relationship(relationship_details, rds_dict)
+        json_utils.add_relationship(relationship_details, rds_dict, aws_update_tag)
 
     _attach_snapshots(neo4j_session, snapshots, aws_update_tag, rds_dict)
 
 
-def split_and_write_entities_to_json(data: dict, folder_path: str) -> None:
+def split_and_write_entities_to_json(data: dict, aws_acc_id: str) -> None:
     """
     Method to split the rds_dict into sub dictionaries of entities that are similar to each other
     """
@@ -313,8 +313,8 @@ def split_and_write_entities_to_json(data: dict, folder_path: str) -> None:
         if 'DBSubnetGroup' in l_list or 'EC2Subnet' in l_list or 'EC2SecurityGroup' in l_list or 'DBSubnetGroup' in l_list:
             subnet_groups.append(entity)
 
-    json_utils.write_to_json(subnet_groups, f'{folder_path}/subnets.json')
-    json_utils.write_to_json(cluster_and_instances, f'{folder_path}/rds_cluster_instance.json')
+    json_utils.write_to_json(subnet_groups, 'subnets.json', 'rds', aws_acc_id)
+    json_utils.write_to_json(cluster_and_instances, 'rds_cluster_instance.json', 'rds', aws_acc_id)
 
 
 @timeit
@@ -420,9 +420,8 @@ def sync(
     }
     json_utils.exclude_properties(rds_dict, keys_to_remove)
 
-    json_utils.create_folder(json_directory, current_aws_account_id)
+    json_utils.create_folder('rds', current_aws_account_id)
 
-    folder_out_path = f'{json_directory}/jsonassets/{current_aws_account_id}/rds/'
     # write relationships to json file
-    json_utils.write_relationship_to_json(rds_dict, folder_out_path)
-    split_and_write_entities_to_json(rds_dict, folder_out_path)
+    json_utils.write_relationship_to_json(rds_dict, 'rds', current_aws_account_id)
+    split_and_write_entities_to_json(rds_dict, current_aws_account_id)

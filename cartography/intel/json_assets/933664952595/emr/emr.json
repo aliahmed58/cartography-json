@@ -1,0 +1,28 @@
+{
+    "entities": [
+        {
+            "identity": "j-2J2ZKITWI57DL",
+            "labels": [
+                "EMRCluster"
+            ],
+            "firstseen": 1686899157,
+            "lastupdated": 1686899107,
+            "Id": "j-2J2ZKITWI57DL",
+            "Name": "test cluster",
+            "InstanceCollectionType": "INSTANCE_GROUP",
+            "ReleaseLabel": "emr-6.11.0",
+            "AutoTerminate": false,
+            "TerminationProtected": false,
+            "VisibleToAllUsers": true,
+            "ServiceRole": "arn:aws:iam::933664952595:role/service-role/AmazonEMR-ServiceRole-20230616T114634",
+            "NormalizedInstanceHours": 0,
+            "MasterPublicDnsName": "ec2-35-175-202-159.compute-1.amazonaws.com",
+            "ScaleDownBehavior": "TERMINATE_AT_TASK_COMPLETION",
+            "KerberosAttributes": {},
+            "ClusterArn": "arn:aws:elasticmapreduce:us-east-1:933664952595:cluster/j-2J2ZKITWI57DL",
+            "StepConcurrencyLevel": 1,
+            "PlacementGroups": [],
+            "OSReleaseLabel": "2.0.20230504.1"
+        }
+    ]
+}

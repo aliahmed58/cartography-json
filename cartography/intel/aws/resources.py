@@ -11,6 +11,7 @@ from .jsonwrappers import elasticache_json
 from . import elasticache
 from .jsonwrappers import elasticsearch_json
 from . import elasticsearch
+from .jsonwrappers import emr_json
 from . import emr
 from . import iam
 from .jsonwrappers import iam_json
@@ -52,7 +53,7 @@ from .ec2.vpc_peerings import sync_vpc_peerings
 
 RESOURCE_FUNCTIONS: Dict = {
     # 'iam': iamjson.sync,
-    # 's3': s3json.sync,
+    # 's3': s3_json.sync,
     # 'dynamodb': dynamodbjson.sync,
     # 'ec2:launch_templates': sync_ec2_launch_templates,
     # 'ec2:autoscalinggroup': sync_ec2_auto_scaling_groups,
@@ -76,19 +77,19 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'ecr': ecr.sync,
     # 'ecs': ecs.sync,
     # 'eks': eks.sync,
-    # 'elasticache': elasticachejson.sync,
+    # 'elasticache': elasticache.sync,
     # 'elastic_ip_addresses': sync_elastic_ip_addresses,
-    # 'emr': emr.sync,
+    # 'emr': emr_json.sync,
     # 'lambda_function': lambda_function.sync,
     # 'kms': kms.sync,
     # 'rds': rdsjson.sync,
     # 'redshift': redshiftjson.sync,
     # 'route53': route53.sync,
-    # 'elasticsearch': elasticsearch.sync,
+    'elasticsearch': elasticsearch.sync,
     # 'permission_relationships': permission_relationships.sync,
     # 'resourcegroupstaggingapi': resourcegroupstaggingapi.sync,
     # 'apigateway': apigateway.sync,
-    'secretsmanager': secretsmanagerjson.sync,
+    # 'secretsmanager': secretsmanager_json.sync,
     # 'securityhub': securityhub.sync,
     # 'sqs': sqs.sync,
     # 'ssm': ssm.sync,

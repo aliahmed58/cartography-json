@@ -1,0 +1,13 @@
+[
+    {
+        "to_id": "j-2J2ZKITWI57DL",
+        "from_id": "933664952595",
+        "to_label": "EMRCluster",
+        "from_label": "AWSAccount",
+        "type": "RESOURCE",
+        "properties": {
+            "firstseen": 1686899157,
+            "lastupdated": 1686899107
+        }
+    }
+]

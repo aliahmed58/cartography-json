@@ -20,27 +20,26 @@ from cartography.util import timeit
 
 logger = logging.getLogger(__name__)
 stat_handler = get_stats_client(__name__)
-json_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 
 
-def _attach_gsi_to_aws_account(gsi: Dict[str, Any], aws_account_id: str, dynamo_dict: dict) -> None:
+def _attach_gsi_to_aws_account(gsi: Dict[str, Any], aws_account_id: str, dynamo_dict: dict, update_tag: int) -> None:
     relationship_details = {
         'to_id': gsi['Arn'], 'from_id': aws_account_id,
         'to_label': 'DynamoDBGlobalSecondaryIndex', 'from_label': 'AWSAccount',
         'type': 'RESOURCE'
     }
 
-    json_utils.add_relationship(relationship_details, dynamo_dict)
+    json_utils.add_relationship(relationship_details, dynamo_dict, update_tag)
 
 
-def _attach_gsi_to_dynamo_table(gsi: Dict[str, Any], dynamo_dict: dict) -> None:
+def _attach_gsi_to_dynamo_table(gsi: Dict[str, Any], dynamo_dict: dict, update_tag: int) -> None:
     relationship_details = {
         'to_id': gsi['Arn'], 'from_id': gsi['TableArn'],
         'to_label': 'DynamoDBGlobalSecondaryIndex', 'from_label': 'DynamoDBTable',
         'type': 'GLOBAL_SECONDARY_INDEX'
     }
 
-    json_utils.add_relationship(relationship_details, dynamo_dict)
+    json_utils.add_relationship(relationship_details, dynamo_dict, update_tag)
 
 @timeit
 def load_dynamodb_gsi(
@@ -60,8 +59,8 @@ def load_dynamodb_gsi(
 
         entities[gsi['Arn']].update(gsi)
 
-        _attach_gsi_to_aws_account(gsi, current_aws_account_id, dynamo_dict)
-        _attach_gsi_to_dynamo_table(gsi, dynamo_dict)
+        _attach_gsi_to_aws_account(gsi, current_aws_account_id, dynamo_dict, aws_update_tag)
+        _attach_gsi_to_dynamo_table(gsi, dynamo_dict, aws_update_tag)
 
 
 
@@ -89,7 +88,7 @@ def load_dynamodb_tables(
             'to_label': 'DynamoDBTable', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
         }
 
-        json_utils.add_relationship(relationship_details, dynamo_dict)
+        json_utils.add_relationship(relationship_details, dynamo_dict, aws_update_tag)
 
 
 @timeit
@@ -141,13 +140,11 @@ def sync(
     """
     json_utils.override_properties(dynamo_dict, properties={})
     json_utils.exclude_properties(dynamo_dict, properties={})
-    json_utils.create_folder(json_directory, current_aws_account_id)
-
-    folder_path = f'{json_directory}/jsonassets/{current_aws_account_id}/dynamodb/'
+    json_utils.create_folder('dynamodb', current_aws_account_id)
 
     # write relationships to json
-    json_utils.write_relationship_to_json(dynamo_dict, folder_path)
+    json_utils.write_relationship_to_json(dynamo_dict, 'dynamodb', current_aws_account_id)
 
     # write nodes to json
     dynamo_list: list[dict] = list(dynamo_dict['entities'].values())
-    json_utils.write_to_json(dynamo_list, f'{folder_path}/dynamodb.json')
+    json_utils.write_to_json(dynamo_list, 'dynamodb.json', 'dynamodb', current_aws_account_id)

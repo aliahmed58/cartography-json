@@ -6,9 +6,10 @@ import os
 
 logger = logging.getLogger(__name__)
 
-out_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+out_directory = f'{os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))}/json_assets/'
 
-def add_relationship(relationship_details: dict, source_dict: dict) -> None:
+
+def add_relationship(relationship_details: dict, source_dict: dict, aws_update_tag: int) -> None:
     """
     :param relationship_details: details of relationship between two entities
     :param source_dict: the s3_dict that holds all the entities and relationships
@@ -25,7 +26,7 @@ def add_relationship(relationship_details: dict, source_dict: dict) -> None:
             'type': relationship_details['type'],
             'properties': {
                 'firstseen': int(time.time()),
-                'lastupdated': int(time.time())
+                'lastupdated': aws_update_tag
             }
         }
     )
@@ -72,24 +73,24 @@ def exclude_properties(data: dict, properties: dict) -> None:
                         entity.pop(prop, None)
 
 
-def write_relationship_to_json(data: dict, folder_path: str) -> None:
+def write_relationship_to_json(data: dict, service_name: str, aws_acc_id: str) -> None:
     try:
         relationships = data['relationships']
         relationships_json = json.dumps(relationships, default=default_json_serializer, indent=4)
-        with open(f'{folder_path}/relationships.json', 'w+') as relationship_file:
+        with open(f'{out_directory}/{aws_acc_id}/{service_name}/relationships.json', 'w+') as relationship_file:
             relationship_file.write(relationships_json)
         relationship_file.close()
     except Exception as e:
         logger.warning("Error occured saving relationships to json")
 
 
-def write_to_json(data: list[dict], filepath: str) -> None:
+def write_to_json(data: list[dict], filename: str, service_name: str, aws_acc_id: str) -> None:
     try:
         entities = {
             'entities': data
         }
         nodes_json_dump = json.dumps(entities, default=default_json_serializer, indent=4)
-        with open(f'{filepath}', 'w+') as nodes_file:
+        with open(f'{out_directory}/{aws_acc_id}/{service_name}/{filename}', 'w+') as nodes_file:
             nodes_file.write(nodes_json_dump)
         nodes_file.close()
 
@@ -97,23 +98,19 @@ def write_to_json(data: list[dict], filepath: str) -> None:
         logger.warning("Error occurred while saving to JSON")
 
 
-def create_folder(folder_path: str, current_aws_account_id: str) -> None:
+def create_folder(folder_name: str, current_aws_account_id: str) -> None:
     """
     Create folder if they do not exist for output json files
-    :param folder_path: the path for folder
+    :param folder_name: name of the folder
     :param current_aws_account_id: the aws account id
     :return: None
     """
-    parent_common_path = f'{folder_path}/jsonassets/{current_aws_account_id}'
-    folders = [
-        f'{folder_path}/jsonassets/', parent_common_path, f'{parent_common_path}/rds/', f'{parent_common_path}/s3/',
-        f'{parent_common_path}/dynamodb/', f'{parent_common_path}/redshift/', f'{parent_common_path}/elasticache/',
-        f'{parent_common_path}/secretsmanager/']
-    for folder in folders:
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+    parent_common_path = f'{out_directory}/{current_aws_account_id}'
+    dirs_to_create = [parent_common_path, f'{parent_common_path}/{folder_name}']
+    for dir in dirs_to_create:
+        if not os.path.exists(dir):
+            os.makedirs(dir)
 
 
 def get_out_folder_path(service_name: str, aws_account_id: str) -> str:
-    folder_path = f'{out_directory}/jsonassets/{aws_account_id}/{service_name}'
-    return folder_path
+    return f'{out_directory}/{aws_account_id}/{service_name}'

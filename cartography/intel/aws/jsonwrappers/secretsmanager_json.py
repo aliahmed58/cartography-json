@@ -39,7 +39,7 @@ def load_secrets(
             'to_label': 'SecretsManagerSecret', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
         }
 
-        json_utils.add_relationship(relationship_details, secrets_dict)
+        json_utils.add_relationship(relationship_details, secrets_dict, aws_update_tag)
 @timeit
 def sync(
     neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str], current_aws_account_id: str,
@@ -76,10 +76,9 @@ def sync(
     }
     json_utils.exclude_properties(secrets_dict, remove_properties)
 
-    json_utils.create_folder(json_utils.out_directory, current_aws_account_id)
-    folder_path = json_utils.get_out_folder_path('secretsmanager', current_aws_account_id)
+    json_utils.create_folder('secretsmanager', current_aws_account_id)
 
-    json_utils.write_relationship_to_json(secrets_dict, folder_path)
+    json_utils.write_relationship_to_json(secrets_dict, 'secretsmanager', current_aws_account_id)
 
     secrets_list = list(secrets_dict['entities'].values())
-    json_utils.write_to_json(secrets_list, f'{folder_path}/secretsmanager.json')
+    json_utils.write_to_json(secrets_list, 'secretsmanager.json', 'secretsmanager', current_aws_account_id)

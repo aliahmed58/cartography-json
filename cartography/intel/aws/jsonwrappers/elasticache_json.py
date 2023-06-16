@@ -18,6 +18,7 @@ from cartography.util import timeit
 logger = logging.getLogger(__name__)
 stat_handler = get_stats_client(__name__)
 
+service_name = 'elasticache'
 
 def _attach_ecluster_to_aws_account(es_cache_dict: Dict, cluster: Dict, aws_account_id: str, aws_update_tag: int) -> None:
     relationship_details = {
@@ -25,7 +26,7 @@ def _attach_ecluster_to_aws_account(es_cache_dict: Dict, cluster: Dict, aws_acco
         'to_label': 'ElasticacheCluster', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
     }
 
-    json_utils.add_relationship(relationship_details, es_cache_dict)
+    json_utils.add_relationship(relationship_details, es_cache_dict, aws_update_tag)
 
 
 def _attach_cluster_to_topic(es_cache_dict: Dict, cluster: Dict, update_tag: int) -> None:
@@ -38,7 +39,7 @@ def _attach_cluster_to_topic(es_cache_dict: Dict, cluster: Dict, update_tag: int
         'type': 'CACHE_CLUSTER'
     }
 
-    json_utils.add_relationship(relationship_details, es_cache_dict)
+    json_utils.add_relationship(relationship_details, es_cache_dict, update_tag)
 
 
 def _attach_topic_to_aws_account(es_cache_dict: Dict, cluster: Dict, aws_account_id: str, update_tag: int) -> None:
@@ -50,10 +51,10 @@ def _attach_topic_to_aws_account(es_cache_dict: Dict, cluster: Dict, aws_account
         'to_label': 'ElasticacheTopic', 'from_label': 'AWSAccount', 'type': 'RESOURCE'
     }
 
-    json_utils.add_relationship(relationship_details, es_cache_dict)
+    json_utils.add_relationship(relationship_details, es_cache_dict, update_tag)
 
 
-def split_and_write_to_json(es_cache_dict: Dict, folder_path: str) -> None:
+def split_and_write_to_json(es_cache_dict: Dict, curr_aws_id) -> None:
     entities = es_cache_dict['entities']
 
     es_clusters = []
@@ -66,8 +67,8 @@ def split_and_write_to_json(es_cache_dict: Dict, folder_path: str) -> None:
         if 'ElasticacheTopic' in l_list:
             es_topics.append(entity)
 
-    json_utils.write_to_json(es_clusters, f'{folder_path}/ElastiCacheClusters.json')
-    json_utils.write_to_json(es_topics, f'{folder_path}/ElastiCacheTopics.json')
+    json_utils.write_to_json(es_clusters, 'ElastiCacheClusters.json', service_name, curr_aws_id)
+    json_utils.write_to_json(es_topics, 'ElastiCacheTopics.json', service_name, curr_aws_id)
 
 @timeit
 def load_elasticache_clusters(
@@ -143,9 +144,7 @@ def sync(
     json_utils.override_properties(es_cache_dict, properties={})
 
     # write relationships to file
-    folder_path = f'{json_utils.out_directory}/jsonassets/{current_aws_account_id}/elasticache/'
-    json_utils.create_folder(json_utils.out_directory, current_aws_account_id)
+    json_utils.create_folder(service_name, current_aws_account_id)
 
-    json_utils.write_relationship_to_json(es_cache_dict, folder_path)
-    es_cache_list = list(es_cache_dict['entities'].values())
-    split_and_write_to_json(es_cache_dict, folder_path)
+    json_utils.write_relationship_to_json(es_cache_dict, service_name, current_aws_account_id)
+    split_and_write_to_json(es_cache_dict, current_aws_account_id)

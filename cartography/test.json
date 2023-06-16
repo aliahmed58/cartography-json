@@ -1,83 +1,84 @@
 [
     {
-        "CacheClusterId": "testcluster2",
-        "ConfigurationEndpoint": {
-            "Address": "testcluster2.dkdh0s.cfg.use1.cache.amazonaws.com",
-            "Port": 11211
+        "DomainId": "933664952595/mytestdomain",
+        "DomainName": "mytestdomain",
+        "ARN": "arn:aws:es:us-east-1:933664952595:domain/mytestdomain",
+        "Created": true,
+        "Deleted": false,
+        "Endpoints": {
+            "vpc": "vpc-mytestdomain-45pqmghyo5ufcezo3zo3l2ey5y.us-east-1.es.amazonaws.com"
         },
-        "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",
-        "CacheNodeType": "cache.t2.micro",
-        "Engine": "memcached",
-        "EngineVersion": "1.6.17",
-        "CacheClusterStatus": "available",
-        "NumCacheNodes": 1,
-        "PreferredAvailabilityZone": "us-east-1d",
-        "CacheClusterCreateTime": "2023-06-15T10:48:06.275000+00:00",
-        "PreferredMaintenanceWindow": "mon:08:00-mon:09:00",
-        "PendingModifiedValues": {},
-        "NotificationConfiguration": {
-            "TopicArn": "arn:aws:sns:us-east-1:933664952595:testchannel",
-            "TopicStatus": "active"
-        },
-        "CacheSecurityGroups": [],
-        "CacheParameterGroup": {
-            "CacheParameterGroupName": "default.memcached1.6",
-            "ParameterApplyStatus": "in-sync",
-            "CacheNodeIdsToReboot": []
-        },
-        "CacheSubnetGroupName": "elasticcache-test",
-        "AutoMinorVersionUpgrade": true,
-        "SecurityGroups": [
-            {
-                "SecurityGroupId": "sg-0aae0f352e7cd6b45",
-                "Status": "active"
+        "Processing": false,
+        "UpgradeProcessing": false,
+        "ElasticsearchVersion": "OpenSearch_2.5",
+        "ElasticsearchClusterConfig": {
+            "InstanceType": "r6g.large.elasticsearch",
+            "InstanceCount": 3,
+            "DedicatedMasterEnabled": true,
+            "ZoneAwarenessEnabled": true,
+            "ZoneAwarenessConfig": {
+                "AvailabilityZoneCount": 3
+            },
+            "DedicatedMasterType": "m6g.large.elasticsearch",
+            "DedicatedMasterCount": 3,
+            "WarmEnabled": false,
+            "ColdStorageOptions": {
+                "Enabled": false
             }
-        ],
-        "AuthTokenEnabled": false,
-        "TransitEncryptionEnabled": false,
-        "AtRestEncryptionEnabled": false,
-        "ARN": "arn:aws:elasticache:us-east-1:933664952595:cluster:testcluster2",
-        "ReplicationGroupLogDeliveryEnabled": false,
-        "LogDeliveryConfigurations": [],
-        "NetworkType": "ipv4",
-        "IpDiscovery": "ipv4"
-    },
-    {
-        "CacheClusterId": "testelasticcachecluster-0001-001",
-        "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",
-        "CacheNodeType": "cache.t4g.micro",
-        "Engine": "redis",
-        "EngineVersion": "7.0.7",
-        "CacheClusterStatus": "available",
-        "NumCacheNodes": 1,
-        "PreferredAvailabilityZone": "us-east-1c",
-        "CacheClusterCreateTime": "2023-06-15T10:51:35.771000+00:00",
-        "PreferredMaintenanceWindow": "sun:03:00-sun:04:00",
-        "PendingModifiedValues": {},
-        "CacheSecurityGroups": [],
-        "CacheParameterGroup": {
-            "CacheParameterGroupName": "default.redis7.cluster.on",
-            "ParameterApplyStatus": "in-sync",
-            "CacheNodeIdsToReboot": []
         },
-        "CacheSubnetGroupName": "elasticcache-test",
-        "AutoMinorVersionUpgrade": true,
-        "SecurityGroups": [
-            {
-                "SecurityGroupId": "sg-0aae0f352e7cd6b45",
-                "Status": "active"
-            }
-        ],
-        "ReplicationGroupId": "testelasticcachecluster",
-        "SnapshotRetentionLimit": 0,
-        "SnapshotWindow": "09:00-10:00",
-        "AuthTokenEnabled": false,
-        "TransitEncryptionEnabled": false,
-        "AtRestEncryptionEnabled": true,
-        "ARN": "arn:aws:elasticache:us-east-1:933664952595:cluster:testelasticcachecluster-0001-001",
-        "ReplicationGroupLogDeliveryEnabled": false,
-        "LogDeliveryConfigurations": [],
-        "NetworkType": "ipv4",
-        "IpDiscovery": "ipv4"
+        "EBSOptions": {
+            "EBSEnabled": true,
+            "VolumeType": "gp3",
+            "VolumeSize": 100,
+            "Iops": 3000,
+            "Throughput": 125
+        },
+        "AccessPolicies": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:us-east-1:933664952595:domain/mytestdomain/*\"}]}",
+        "SnapshotOptions": {},
+        "VPCOptions": {
+            "VPCId": "vpc-0ec6b1f709d1edae9",
+            "SubnetIds": [
+                "subnet-00233e41fb23a0932",
+                "subnet-03127e9e4464f227b",
+                "subnet-06efce8ff677b34ad"
+            ],
+            "AvailabilityZones": [
+                "us-east-1c",
+                "us-east-1b",
+                "us-east-1a"
+            ],
+            "SecurityGroupIds": [
+                "sg-0aae0f352e7cd6b45"
+            ]
+        },
+        "CognitoOptions": {
+            "Enabled": false
+        },
+        "EncryptionAtRestOptions": {
+            "Enabled": true,
+            "KmsKeyId": "arn:aws:kms:us-east-1:933664952595:key/3a83389f-a2a4-4607-a746-1ffeb2e16d5f"
+        },
+        "NodeToNodeEncryptionOptions": {
+            "Enabled": true
+        },
+        "AdvancedOptions": {
+            "indices.fielddata.cache.size": "20",
+            "indices.query.bool.max_clause_count": "1024",
+            "override_main_response_version": "false",
+            "rest.action.multi.allow_explicit_index": "true"
+        },
+        "DomainEndpointOptions": {
+            "EnforceHTTPS": true,
+            "TLSSecurityPolicy": "Policy-Min-TLS-1-0-2019-07",
+            "CustomEndpointEnabled": false
+        },
+        "AdvancedSecurityOptions": {
+            "Enabled": true,
+            "InternalUserDatabaseEnabled": true,
+            "AnonymousAuthEnabled": false
+        },
+        "AutoTuneOptions": {
+            "State": "ENABLED"
+        }
     }
 ]
