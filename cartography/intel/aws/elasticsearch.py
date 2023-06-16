@@ -114,7 +114,7 @@ def _link_es_domains_to_dns(
     :param domain_id: ES domain id
     :param domain_data: domain data
     """
-    # TODO add support for endpoints to this method
+    # TODO add support for endpoxints to this method
     if domain_data.get("Endpoint"):
         ingest_dns_record_by_fqdn(
             neo4j_session, aws_update_tag, domain_data["Endpoint"], domain_id,

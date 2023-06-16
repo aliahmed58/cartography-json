@@ -33,6 +33,30 @@ def _link_es_domains_to_dns(
     else:
         logger.debug(f"No es endpoint data for domain id {domain_id}")
 
+
+@timeit
+def _link_es_domain_vpc(neo4j_session: neo4j.Session, domain_id: str,
+                        domain_data: Dict, aws_update_tag: int, es_dict: Dict) -> None:
+
+    if domain_data.get("VPCOptions"):
+        vpc_data = domain_data["VPCOptions"]
+        subnetList = vpc_data.get("SubnetIds", [])
+        groupList = vpc_data.get("SecurityGroupIds", [])
+
+        for subnet in subnetList:
+            relationship_details = {
+                'to_id': subnet, 'from_id': domain_id, 'to_label': 'EC2Subnet', 'from_label': 'ESDomain',
+                'type': 'PART_OF_SUBNET'
+            }
+            json_utils.add_relationship(relationship_details, es_dict, aws_update_tag)
+
+        for sec_grp in groupList:
+            sec_relationship = {
+                'to_id': sec_grp, 'from_id': domain_id, 'to_label': 'EC2SecurityGroup',
+                'from_label': 'ESDomain', 'type': 'MEMBER_OF_EC2_SECURITY_GROUP'
+            }
+            json_utils.add_relationship(sec_relationship, es_dict, aws_update_tag)
+
 @timeit
 def _load_es_domains(
         neo4j_session: neo4j.Session, domain_list: List[Dict],
@@ -44,7 +68,7 @@ def _load_es_domains(
 
         domain_id = domain['DomainId']
 
-        entities[domain['DomainId']] = {
+        entities[domain_id] = {
             'identity': domain_id,
             'labels': ['ESDomain'],
             'firstseen': int(time.time()),
@@ -59,13 +83,45 @@ def _load_es_domains(
         }
         json_utils.add_relationship(relationship_details, es_dict, aws_update_tag)
 
+        # TODO see if carto connects EC2SecurityGroups with ESDomain
         _link_es_domains_to_dns(neo4j_session, domain_id, domain, aws_update_tag, es_dict)
+        # TODO Figure out connecting domain to vpc
         # _link_es_domain_vpc(neo4j_session, domain_id, domain, aws_update_tag)
-        # _process_access_policy(neo4j_session, domain_id, domain)
+        _process_access_policy(neo4j_session, domain_id, domain, es_dict)
+
+
+@timeit
+def _process_access_policy(neo4j_session: neo4j.Session, domain_id: str, domain_data: Dict, es_dict: Dict) -> None:
+    """
+    Link the ES domain to its DNS FQDN endpoint and create associated nodes in the graph
+    if needed
+
+    :param neo4j_session: Neo4j session object
+    :param domain_id: ES domain id
+    :param domain_data: domain data
+    """
+
+    exposed_internet = False
+
+    if domain_data.get("Endpoint") and domain_data.get("AccessPolicies"):
+        policy = Policy(json.loads(domain_data['AccessPolicies']))
+        if policy.is_internet_accessible():
+            exposed_internet = True
+
+    entities = es_dict['entities']
+    entities[domain_id]['InternetExposed'] = exposed_internet
 
 
 def split_and_write_to_json(es_dict: Dict, aws_acc_id: str) -> None:
-    pass
+    entities: Dict = es_dict['entities']
+
+    es_domains: list = []
+    for _, entity in entities.items():
+        l_list = entity['labels']
+        if 'ESDomain' in l_list:
+            es_domains.append(entity)
+
+    json_utils.write_to_json(es_domains, 'es_domains.json', AWSServices.ELASTIC_SEARCH.value, aws_acc_id)
 
 
 @timeit
