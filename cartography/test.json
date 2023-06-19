@@ -1,7 +1,0 @@
-[
-    {
-        "imageDigest": "sha256:7e9b6e7ba2842c91cf49f3e214d04a7a496f8214356f41d81a6e6dcad11f11e3",
-        "imageTag": "latest",
-        "repo_uri": "933664952595.dkr.ecr.us-east-1.amazonaws.com/devrepo"
-    }
-]

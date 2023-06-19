@@ -2,6 +2,7 @@ import datetime
 import time
 import json
 import logging
+from typing import Dict, Any, List
 import os
 
 logger = logging.getLogger(__name__)
@@ -114,3 +115,17 @@ def create_folder(folder_name: str, current_aws_account_id: str) -> None:
 
 def get_out_folder_path(service_name: str, aws_account_id: str) -> str:
     return f'{out_directory}/{aws_account_id}/{service_name}'
+
+
+def add_to_entities(entities: Dict, entity_to_add: Dict, entity_id: Any, update_tag: int, labels: List[str],
+                    region: str = None):
+    entities[entity_id] = {
+        'identity': entity_id,
+        'labels': labels,
+        'firstseen': int(time.time()),
+        'lastupdated': update_tag
+    }
+    entities[entity_id].update(entity_to_add)
+
+    if region is not None:
+        entities[entity_id].update({'Region': region})
