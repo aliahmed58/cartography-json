@@ -26,6 +26,7 @@ from .jsonwrappers import redshift_json
 from . import redshift
 from . import resourcegroupstaggingapi
 from . import route53
+from . import s3
 from .jsonwrappers import s3_json
 from .jsonwrappers import secretsmanager_json
 from . import secretsmanager
@@ -56,7 +57,7 @@ from .ec2.vpc_peerings import sync_vpc_peerings
 
 RESOURCE_FUNCTIONS: Dict = {
     # 'iam': iamjson.sync,
-    # 's3': s3_json.sync,
+    's3': s3.sync,
     # 'dynamodb': dynamodb_json.sync,
     # 'ec2:launch_templates': sync_ec2_launch_templates,
     # 'ec2:autoscalinggroup': sync_ec2_auto_scaling_groups,
@@ -64,7 +65,7 @@ RESOURCE_FUNCTIONS: Dict = {
     # # they rely on EC2Instance data provided by this module.
     # 'ec2:instance': sync_ec2_instances_json,
     # 'ec2:images': sync_ec2_images,
-    'ec2:keypair': sync_ec2_key_pairs_json,
+    # 'ec2:keypair': sync_ec2_key_pairs_json,
     # 'ec2:load_balancer': sync_load_balancers,
     # 'ec2:load_balancer_v2': sync_load_balancer_v2s,
     # 'ec2:network_interface': sync_network_interfaces,
