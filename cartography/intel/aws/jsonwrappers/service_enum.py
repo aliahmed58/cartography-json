@@ -12,5 +12,5 @@ class AWSServices(Enum):
     RDS = 'rds'
     REDSHIFT = 'redshift'
     SECRETS_MANAGER = 'secretsmanager'
-    EC2_INSTANCES = 'ec2:instances'
+    EC2_INSTANCES = 'ec2'
     EC2_KEYPAIR = 'ec2:keypair'

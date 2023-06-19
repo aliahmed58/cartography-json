@@ -38,6 +38,7 @@ from .ec2.images import sync_ec2_images
 from .ec2.instances import sync_ec2_instances
 from .jsonwrappers.ec2.instances_json import sync_ec2_instances_json
 from .ec2.internet_gateways import sync_internet_gateways
+from .jsonwrappers.ec2.key_pairs_json import sync_ec2_key_pairs_json
 from .ec2.key_pairs import sync_ec2_key_pairs
 from .ec2.launch_templates import sync_ec2_launch_templates
 from .ec2.load_balancer_v2s import sync_load_balancer_v2s
@@ -61,9 +62,9 @@ RESOURCE_FUNCTIONS: Dict = {
     # 'ec2:autoscalinggroup': sync_ec2_auto_scaling_groups,
     # # `ec2:instance` must be included before `ssm` and `ec2:images`,
     # # they rely on EC2Instance data provided by this module.
-    'ec2:instance': sync_ec2_instances_json,
+    # 'ec2:instance': sync_ec2_instances_json,
     # 'ec2:images': sync_ec2_images,
-    # 'ec2:keypair': sync_ec2_key_pairs,
+    'ec2:keypair': sync_ec2_key_pairs_json,
     # 'ec2:load_balancer': sync_load_balancers,
     # 'ec2:load_balancer_v2': sync_load_balancer_v2s,
     # 'ec2:network_interface': sync_network_interfaces,

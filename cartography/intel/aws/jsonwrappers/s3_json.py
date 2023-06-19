@@ -222,6 +222,17 @@ def sync(
         'entities': {}
     }
 
+    """
+    entities = {
+    
+        'id': {
+            
+        },
+        'anotherid': {
+        
+        }
+    """
+
     logger.info("Syncing S3 for account '%s'.", current_aws_account_id)
     bucket_data = get_s3_bucket_list(boto3_session)
     acl_and_policy_data_iter = get_s3_bucket_details(boto3_session, bucket_data)
