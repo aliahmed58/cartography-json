@@ -129,3 +129,15 @@ def add_to_entities(entities: Dict, entity_to_add: Dict, entity_id: Any, update_
 
     if region is not None:
         entities[entity_id].update({'Region': region})
+
+def load_previous_entities(service_name: str, aws_acc_id: str) -> Dict:
+    entities: Dict = {}
+    folder_path = f'{out_directory}{aws_acc_id}/{service_name}'
+    json_file_list = os.listdir(folder_path)
+    for json_file in json_file_list:
+        if json_file is not 'relationships.json':
+            file_content = json.loads(f'{folder_path}/{json_file}')
+            for entity in file_content['entities']:
+                entities[entity['identity']] = entity
+
+    return entities

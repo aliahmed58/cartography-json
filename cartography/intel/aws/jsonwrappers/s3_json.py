@@ -210,6 +210,7 @@ def split_and_write_to_json(data: dict, aws_acc_id: str) -> None:
     json_utils.write_to_json(s3_acls, 's3acls.json', AWSServices.S3.value, aws_acc_id)
     json_utils.write_to_json(s3_policy_statements, 's3policystatements.json', AWSServices.S3.value, aws_acc_id)
 
+
 @timeit
 def sync(
         neo4j_session: neo4j.Session, boto3_session: boto3.session.Session, regions: List[str],
